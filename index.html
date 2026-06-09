@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Meta-AutoML | Research Showcase — Optimización por Refuerzo</title>
+    <style>
+        /* ---------- LIGHT THEME SYSTEM ---------- */
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #eef2ff;
+            --secondary: #0d9488;
+            --secondary-light: #ccfbf1;
+            --accent: #10b981;
+            --bg-body: #f9fafb;
+            --bg-surface: #ffffff;
+            --bg-soft: #f1f5f9;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --text-soft: #64748b;
+            --border: #e2e8f0;
+            --border-focus: #cbd5e1;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+            --radius-card: 1rem;
+            --radius-element: 0.75rem;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+
+        /* ---------- TYPOGRAPHY & LINKS ---------- */
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        a {
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        /* ---------- NAVIGATION (RESPONSIVE) ---------- */
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            padding: 0.9rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        nav .logo {
+            font-weight: 800;
+            font-size: 1.45rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.3px;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        nav ul a {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.95rem;
+            padding: 0.4rem 0;
+            border-bottom: 2px solid transparent;
+        }
+
+        nav ul a:hover {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* ---------- HERO SECTION ---------- */
+        .hero {
+            padding: 4rem 2rem 3rem 2rem;
+            max-width: 1280px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .badge {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 0.35rem 1.1rem;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(79, 70, 229, 0.2);
+        }
+
+        h1 {
+            font-size: clamp(2.2rem, 6vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 1.25rem;
+            line-height: 1.2;
+            background: linear-gradient(135deg, var(--text-main) 0%, #1e293b 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p.subtitle {
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            max-width: 820px;
+            margin: 0 auto 2rem auto;
+        }
+
+        .meta-authors {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 2rem;
+            color: var(--text-soft);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 0;
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-soft);
+            border-radius: 2rem;
+        }
+
+        .meta-authors strong {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        /* ---------- CONTAINERS & GRIDS ---------- */
+        .section-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .section-title {
+            font-size: 1.9rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+            padding-bottom: 0.6rem;
+            color: var(--text-main);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 70px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+        }
+
+        /* Abstract / card containers */
+        .abstract-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 2rem 2.5rem;
+            margin-bottom: 3rem;
+            box-shadow: var(--shadow-md);
+            transition: all 0.2s;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-card);
+            padding: 1.8rem;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary-light);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-icon {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .card h3 {
+            margin-bottom: 0.75rem;
+            font-size: 1.35rem;
+            font-weight: 700;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* MDP structure */
+        .mdp-structure {
+            background: var(--bg-surface);
+            border-radius: var(--radius-card);
+            padding: 2rem 2rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+            margin-top: 2rem;
+        }
+
+        .mdp-flow {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .flow-node {
+            background: var(--bg-soft);
+            border: 1px solid var(--border);
+            padding: 1.4rem 1rem;
+            border-radius: 1rem;
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .flow-node h4 {
+            color: var(--primary);
+            margin-bottom: 0.6rem;
+            font-size: 1.1rem;
+        }
+
+        .flow-node p {
+            font-size: 0.85rem;
+            color: var(--text-soft);
+        }
+
+        /* phases grid */
+        .phases-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .phase-item {
+            background: var(--bg-surface);
+            padding: 0.9rem 1rem;
+            border-left: 4px solid var(--primary);
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .phase-item strong {
+            color: var(--primary-dark);
+        }
+
+        /* Results section (light background delimited) */
+        .results-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        .chart-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            padding: 1.8rem;
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-md);
+        }
+
+        .chart-row {
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .chart-bar-bg {
+            background: var(--bg-soft);
+            height: 2rem;
+            border-radius: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--border-focus);
+        }
+
+        .chart-bar-fill {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding-left: 1rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: white;
+            transition: width 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .chart-bar-fill.dqn {
+            background: linear-gradient(90deg, #0d9488, #14b8a6);
+        }
+
+        .chart-bar-fill.ql {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .chart-bar-fill.ask {
+            background: linear-gradient(90deg, #ef4444, #f87171);
+        }
+
+        /* conclusions + double column */
+        .conclusion-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .conclusion-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            padding: 1.8rem;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s;
+        }
+
+        .conclusion-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .conclusion-card h3 {
+            margin-bottom: 1rem;
+            display: inline-block;
+        }
+
+        .conclusion-card ul {
+            list-style-position: inside;
+            color: var(--text-muted);
+        }
+
+        .conclusion-card li {
+            margin-bottom: 0.65rem;
+            font-size: 0.95rem;
+        }
+
+        footer {
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border);
+            padding: 2.5rem 2rem;
+            text-align: center;
+            color: var(--text-soft);
+            font-size: 0.85rem;
+        }
+
+        /* responsive fine-tuning */
+        @media (max-width: 900px) {
+            .results-container {
+                grid-template-columns: 1fr;
+                gap: 1.8rem;
+            }
+            .section-container {
+                padding: 3rem 1.5rem;
+            }
+            nav {
+                padding: 0.8rem 1.5rem;
+            }
+            nav ul {
+                gap: 1.2rem;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .conclusion-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .hero {
+                padding: 2rem 1.2rem 2rem;
+            }
+            .meta-authors {
+                flex-direction: column;
+                gap: 0.8rem;
+                text-align: center;
+                border-radius: 1.5rem;
+            }
+            .abstract-box {
+                padding: 1.5rem;
+            }
+            .mdp-flow {
+                flex-direction: column;
+            }
+            .flow-node {
+                min-width: auto;
+            }
+            .phase-item {
+                font-size: 0.85rem;
+            }
+            .section-title {
+                font-size: 1.65rem;
+            }
+            .card h3 {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 550px) {
+            nav {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            nav ul {
+                justify-content: center;
+                gap: 1rem;
+            }
+            nav ul a {
+                font-size: 0.85rem;
+                padding: 0.3rem 0;
+            }
+            .badge {
+                font-size: 0.7rem;
+            }
+            .chart-bar-fill {
+                font-size: 0.7rem;
+                padding-left: 0.6rem;
+            }
+        }
+
+        /* Extra details for smoothness */
+        .chart-box h3, .mdp-structure h3 {
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .bg-soft-section {
+            background-color: var(--bg-soft);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        button, .btn-reset {
+            all: unset;
+        }
+
+        /* readable accent */
+        .accent-text {
+            color: var(--primary);
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+        }
+
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">Meta-AutoML · RL Orchestrator</div>
+        <ul>
+            <li><a href="#resumen">Resumen</a></li>
+            <li><a href="#arquitectura">Modelado MDP</a></li>
+            <li><a href="#fases">Pipeline</a></li>
+            <li><a href="#resultados">Resultados</a></li>
+            <li><a href="#conclusiones">Conclusiones</a></li>
+        </ul>
+    </nav>
+
+    <header class="hero">
+        <span class="badge">🎓 Tesis Investigación — Universidad de Cuenca 2026</span>
+        <h1>Meta-AutoML: Aprendizaje por Refuerzo para la Optimización Autónoma de Pipelines de Machine Learning</h1>
+        <p class="subtitle">Plataforma de AutoML basada en procesos secuenciales de decisión (MDP), DQN, Q-Learning y asistencia de LLM, superando a frameworks tradicionales en robustez y efectividad predictiva.</p>
+        
+        <div class="meta-authors">
+            <div>👤 Autor: <strong>Jonnathan Manuel Cuzco Tito</strong></div>
+            <div>📚 Director: <strong>Víctor Hugo Saquicela Galarza</strong></div>
+            <div>🏛️ Institución: <strong>Universidad de Cuenca</strong></div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Resumen section -->
+        <div class="section-container" id="resumen">
+            <div class="abstract-box">
+                <h2 style="margin-bottom: 1rem; font-size: 1.7rem; color: var(--primary);">📄 Abstract Ejecutivo</h2>
+                <p style="color: var(--text-main); font-size: 1.02rem; text-align: justify; line-height: 1.6;">
+                    Esta investigación introduce <strong>Meta-AutoML</strong>, un sistema de vanguardia que combina <strong>Aprendizaje por Refuerzo (RL)</strong> y Meta-Learning para automatizar completamente la construcción de pipelines de Machine Learning. Reformulamos el problema CASH (Combined Algorithm Selection and Hyperparameter optimization) como un <strong>Proceso de Decisión de Markov (MDP)</strong> continuo, donde un agente inteligente aprende estrategias offline a partir de una base de conocimiento de OpenML. Además, incorporamos LLMs especializados para ajuste fino de hiperparámetros. El resultado es una herramienta robusta, adaptable y eficiente que redefine la automatización en ciencia de datos.
+                </p>
+            </div>
+
+            <div class="grid-3">
+                <div class="card">
+                    <div class="card-icon">🧠</div>
+                    <h3>Meta-Learning Adaptativo</h3>
+                    <p>Extracción de 182 metacaracterísticas (estructurales, estadísticas y teoría de la información) mediante <em>pymfe</em> para caracterizar cualquier dataset de entrada y guiar al agente RL.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚙️</div>
+                    <h3>DQN vs Q-Learning</h3>
+                    <p>Doble estrategia: Q-Learning con discretización por clustering y Deep Q-Networks (DQN) operando en espacios de acción continuos. Ambos superan a AutoKeras y referencias clásicas.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🤖</div>
+                    <h3>Hiperparametrización vía LLM</h3>
+                    <p>Integración de Modelos de Lenguaje Grande mediante prompts especializados, optimizando hiperparámetros con razonamiento semántico y eliminando búsquedas costosas tipo grid search.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MDP Architecture section with light elegant background -->
+        <div class="bg-soft-section" id="arquitectura">
+            <div class="section-container">
+                <h2 class="section-title">🧩 Modelado del Proceso de Decisión de Markov (MDP)</h2>
+                <p style="color: var(--text-muted); margin-bottom: 1.8rem; font-size: 1.05rem;">El corazón algorítmico: el agente aprende a construir pipelines óptimos maximizando el rendimiento predictivo y minimizando costes temporales.</p>
+                
+                <div class="mdp-structure">
+                    <h3 style="color: var(--primary-dark); margin-bottom: 0.75rem;">🏛️ Componentes del entorno de refuerzo</h3>
+                    <p style="margin-bottom: 1rem;"><strong>🔹 Estado (280 dimensiones):</strong> 182 metacaracterísticas + 3 variables de tipo de tarea (clasificación/regresión/clustering) + 95 variables binarias de seguimiento de acciones aplicadas.</p>
+                    <p style="margin-bottom: 1rem;"><strong>⚡ Espacio de acciones (95 operaciones):</strong> limpieza, imputación, ingeniería de variables, selección, modelos ML y prompts LLM.</p>
+                    <p style="margin-bottom: 1.5rem;"><strong>🎯 Función de recompensa:</strong> equilibra métricas clave (F1-score, R² ajustado, Silhouette) con una penalización logarítmica por tiempo de cómputo del pipeline.</p>
+
+                    <div class="mdp-flow">
+                        <div class="flow-node">
+                            <h4>📊 Estado actual (S)</h4>
+                            <p>Metacaracterísticas + historial de acciones ejecutadas.</p>
+                        </div>
+                        <div class="flow-node" style="border: 2px solid var(--primary-light); background: white;">
+                            <h4>🤖 Agente RL (Política π)</h4>
+                            <p>Decide siguiente transformación o modelo a instanciar.</p>
+                        </div>
+                        <div class="flow-node">
+                            <h4>🛠️ Acción (A)</h4>
+                            <p>Preprocesamiento, selección de modelo o ajuste LLM.</p>
+                        </div>
+                        <div class="flow-node">
+                            <h4>🏆 Recompensa (R)</h4>
+                            <p>Efectividad predictiva – penalización temporal.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pipeline phases -->
+        <div class="section-container" id="fases">
+            <h2 class="section-title">📌 Pipeline de 15 fases secuenciales</h2>
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">Meta-AutoML opera rigurosamente paso a paso, desde la ingesta hasta la evaluación, garantizando trazabilidad y adaptabilidad.</p>
+            <div class="phases-list">
+                <div class="phase-item"><strong>Fase 1</strong> · Detección tipo variable</div>
+                <div class="phase-item"><strong>Fase 2</strong> · Verificación nulos</div>
+                <div class="phase-item"><strong>Fase 3</strong> · Imputación numérica</div>
+                <div class="phase-item"><strong>Fase 4</strong> · Imputación texto</div>
+                <div class="phase-item"><strong>Fase 5</strong> · Codificación low-freq strings</div>
+                <div class="phase-item"><strong>Fase 6</strong> · Codificación mid-freq strings</div>
+                <div class="phase-item"><strong>Fase 7</strong> · Codificación high-freq strings</div>
+                <div class="phase-item"><strong>Fase 8</strong> · Detección outliers</div>
+                <div class="phase-item"><strong>Fase 9</strong> · Tratamiento outliers</div>
+                <div class="phase-item"><strong>Fase 10</strong> · Selección de variables</div>
+                <div class="phase-item"><strong>Fase 11</strong> · Feature engineering</div>
+                <div class="phase-item"><strong>Fase 12</strong> · Selección de modelo ML</div>
+                <div class="phase-item"><strong>Fase 13</strong> · Configuración hiperparámetros (LLM + RL)</div>
+                <div class="phase-item"><strong>Fase 14</strong> · Entrenamiento del modelo</div>
+                <div class="phase-item"><strong>Fase 15</strong> · Evaluación final & validación</div>
+            </div>
+        </div>
+
+        <!-- Resultados section con colores claros -->
+        <div class="bg-soft-section" id="resultados">
+            <div class="section-container">
+                <h2 class="section-title">📈 Resultados Experimentales y Benchmarking</h2>
+                <p style="color: var(--text-muted); margin-bottom: 2rem;">Evaluación sobre <strong>OpenML-CC18, OpenML-CTR23, FCPS</strong> y comparación con sistemas líderes Auto-Sklearn 2, AutoKeras.</p>
+                
+                <div class="results-container">
+                    <div class="chart-box">
+                        <h3 style="margin-bottom: 1.2rem; color: var(--primary);">🏅 Robustez estructural (tasa de éxito)</h3>
+                        <div class="chart-row">
+                            <div class="chart-label"><span>Meta-AutoML (DQN)</span> <span>Ganador en robustez</span></div>
+                            <div class="chart-bar-bg"><div class="chart-bar-fill dqn" style="width: 92%;">92% eficiencia</div></div>
+                        </div>
+                        <div class="chart-row">
+                            <div class="chart-label"><span>Auto-Sklearn 2</span> <span>Referencia industrial</span></div>
+                            <div class="chart-bar-bg"><div class="chart-bar-fill ask" style="width: 78%;">78% robustez</div></div>
+                        </div>
+                        <p class="text-muted mt-2" style="font-size: 0.85rem;">✅ DQN supera a Auto-Sklearn2 en robustez un 13.89% (clasificación) y 25.71% (regresión) con significancia estadística.</p>
+                    </div>
+
+                    <div class="chart-box">
+                        <h3 style="margin-bottom: 1.2rem; color: var(--primary);">🎯 Rendimiento predictivo (F1-Score / R²)</h3>
+                        <div class="chart-row">
+                            <div class="chart-label"><span>Meta-AutoML (Q-Learning)</span> <span>Mayor precisión</span></div>
+                            <div class="chart-bar-bg"><div class="chart-bar-fill ql" style="width: 88%;">88% rendimiento</div></div>
+                        </div>
+                        <div class="chart-row">
+                            <div class="chart-label"><span>Meta-AutoML (DQN)</span> <span>Equilibrio velocidad/precisión</span></div>
+                            <div class="chart-bar-bg"><div class="chart-bar-fill dqn" style="width: 75%;">75% rendimiento</div></div>
+                        </div>
+                        <p class="text-muted mt-2" style="font-size: 0.85rem;">🔍 Q-Learning con discretización por clustering ofrece +13% F1 frente a DQN. En tareas de clustering, ambos alcanzan rendimiento equivalente.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conclusiones y trabajo futuro -->
+        <div class="section-container" id="conclusiones">
+            <h2 class="section-title">🔮 Conclusiones & Próximos pasos</h2>
+            <div class="conclusion-grid">
+                <div class="conclusion-card">
+                    <h3 style="color: var(--accent);">✅ Conclusiones clave</h3>
+                    <ul>
+                        <li>✔️ Validación robusta del enfoque RL para orquestar pipelines complejos de ML.</li>
+                        <li>✔️ Meta-AutoML supera sistemáticamente a AutoKeras y competidores clásicos en clasificación y regresión.</li>
+                        <li>✔️ El entrenamiento offline sobre OpenML elimina iteraciones costosas en tiempo real.</li>
+                        <li>✔️ DQN demuestra mayor estabilidad estructural, Q-Learning mejor precisión predictiva.</li>
+                    </ul>
+                </div>
+                <div class="conclusion-card">
+                    <h3 style="color: var(--secondary);">🚀 Trabajo futuro</h3>
+                    <ul>
+                        <li>🧠 Reevaluación dinámica de metacaracterísticas tras cada acción intermedia (hot meta-features).</li>
+                        <li>📡 Aprendizaje continuo en producción: actualización incremental de la base de conocimiento con pipelines reales.</li>
+                        <li>⚙️ Extensión a dominios multimodales (series temporales, texto no estructurado).</li>
+                        <li>🤝 Integración con MLOps para despliegue automático de pipelines descubiertos.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2026 Meta-AutoML Research Project — Ingeniería en Computación, Universidad de Cuenca. Basado en tesis de grado: Aprendizaje por Refuerzo para optimización autónoma de pipelines.  |  Diseño claro & responsivo mejorado</p>
+    </footer>
+</body>
+</html>
